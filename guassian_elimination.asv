@@ -1,0 +1,23 @@
+function y = guassian_elimination(a)
+    [m, n] = size(a)
+    for i = 1:m
+        % pivot not to be 0
+        if a(i, i) == 0
+            for j = i+1:m
+                if a(j, i) ~= 0
+                    a(i, :) = a(j, :);
+                    break
+                end
+            end
+        end
+        
+        % elimination
+        for j = i+1:m
+            factor = a(j, i) / a(i, i)
+            for k = i:n
+                a(j, k) = a(i, k) * factor
+            end
+        end
+    end
+
+end

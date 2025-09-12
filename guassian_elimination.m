@@ -1,0 +1,27 @@
+function y = guassian_elimination(a)
+    [m, n] = size(a);
+    for i = 1:min(m,n)
+        % -- 找到當前欄位下面第一個非 0 就互換（簡單 pivot） --
+        if a(i,i) == 0
+            j = find(a(i+1:m, i) ~= 0, 1, 'first');
+            if ~isempty(j)
+                j = j + i;
+                a([i j], :) = a([j i], :);
+            end
+        end
+
+        % 若整欄皆 0，跳過這一欄
+        if a(i,i) == 0
+            continue
+        end
+
+        % -- 消去：一次性向量化更新 (比三層迴圈快) --
+        if i < m
+            rows = (i+1):m;
+            factors = a(rows, i) / a(i, i);         % (m-i)×1
+            a(rows, i:n) = a(rows, i:n) - factors * a(i, i:n);
+            a(rows, i) = 0;                         % 乾淨化（避免殘留小數）
+        end
+    end
+    y = a;
+end
