@@ -1,3 +1,5 @@
-a = [0 2; 3 4];
-y = guassian_elimination(a);
-disp(y);
+A = [0 2; 3 4];
+b = [1 1];
+x = guassian_elimination(A, b);
+disp(x);
+disp(A \ b')

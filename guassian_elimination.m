@@ -1,27 +1,44 @@
-function y = guassian_elimination(a)
-    [m, n] = size(a);
-    for i = 1:min(m,n)
-        % -- 找到當前欄位下面第一個非 0 就互換（簡單 pivot） --
-        if a(i,i) == 0
-            j = find(a(i+1:m, i) ~= 0, 1, 'first');
-            if ~isempty(j)
-                j = j + i;
-                a([i j], :) = a([j i], :);
-            end
+function [x, status] = guassian_elimination(A, b, tol)
+% Solve A x = b by Gaussian elimination with partial pivoting
+% status: "ok" | "singular"
+    if nargin < 3, tol = 1e-12; end
+
+    [m, n] = size(A);
+    b = b(:);  % 保證是 column vector
+    if m ~= n || n ~= numel(b)
+        error('Dimension mismatch: A must be n×n and b must be n×1');
+    end
+
+    % --- Forward elimination with partial pivoting ---
+    for i = 1:n
+        % 1) pivot: 選 |A(k,i)| 最大者與第 i 列互換
+        [~, p_rel] = max(abs(A(i:m, i)));
+        p = p_rel + i - 1;
+        if abs(A(p, i)) < tol
+            x = NaN(n,1);
+            status = "singular";
+            return
+        end
+        if p ~= i
+            A([i p], :) = A([p i], :);
+            b([i p])   = b([p i]);
         end
 
-        % 若整欄皆 0，跳過這一欄
-        if a(i,i) == 0
-            continue
-        end
-
-        % -- 消去：一次性向量化更新 (比三層迴圈快) --
-        if i < m
-            rows = (i+1):m;
-            factors = a(rows, i) / a(i, i);         % (m-i)×1
-            a(rows, i:n) = a(rows, i:n) - factors * a(i, i:n);
-            a(rows, i) = 0;                         % 乾淨化（避免殘留小數）
+        % 2) 消去（向量化）
+        rows = (i+1):n;
+        if ~isempty(rows)
+            factors = A(rows, i) / A(i, i);          % (n-i)×1
+            A(rows, i:n) = A(rows, i:n) - factors * A(i, i:n);
+            A(rows, i)   = 0;                        % 清掉數值殘留
+            b(rows)      = b(rows)      - factors * b(i);
         end
     end
-    y = a;
+
+    % --- Back substitution ---
+    x = zeros(n, 1);
+    for i = n:-1:1
+        s = A(i, i+1:n) * x(i+1:n);
+        x(i) = (b(i) - s) / A(i, i);
+    end
+    status = "ok";
 end
